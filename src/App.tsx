@@ -1,35 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect } from "react";
+import "./App.css";
+import { ContextHolder, useAuth, useLoginWithRedirect } from "@frontegg/react";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  const loginWithRedirect = useLoginWithRedirect();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      loginWithRedirect();
+    }
+  }, [isAuthenticated, loginWithRedirect]);
+
+  const logout = () => {
+    const baseUrl = ContextHolder.getContext().baseUrl;
+    window.location.href = `${baseUrl}/oauth/logout?post_logout_redirect_uri=${window.location}`;
+  };
+
+  if (isLoading) return <div>Loading...</div>;
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="App">
+      {isAuthenticated ? (
+        <div>
+          <div>
+            <img src={user?.profilePictureUrl || undefined} alt={user?.name} />
+          </div>
+          <div>
+            <span>Logged in as: {user?.name}</span>
+          </div>
+          <div>
+            <button onClick={() => alert(user?.accessToken)}>
+              What is my access token?
+            </button>
+          </div>
+          <button onClick={() => logout()}>Click to logout</button>
+        </div>
+      ) : (
+        <div>
+          <button onClick={() => loginWithRedirect()}>Click me to login</button>
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;
